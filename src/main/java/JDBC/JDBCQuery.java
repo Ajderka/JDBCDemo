@@ -1,18 +1,16 @@
 package JDBC;
 
-
 import org.postgresql.ds.PGSimpleDataSource;
-
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.Calendar;
+import java.sql.Date;
 
 public class JDBCQuery {
     private static DataSource dataSource;
 
     public static void main(String[] args) throws SQLException {
+        long time = System.currentTimeMillis();
         init();
         queryCreateTableRoles();
         queryCreateTableUsers();
@@ -23,10 +21,105 @@ public class JDBCQuery {
         queryAddDateToRoles();
         queryAddDateToUsers();
         queryAddDateToAuthors();
+        queryAddDateToBooks();
+        queryAddDateToCoAuthors();
+        queryAddDateToLoggers();
 
+        System.out.println(System.currentTimeMillis() - time + "ms execute program time.");
     }
 
-    private static void queryAddDateToAuthors() {
+    private static void queryAddDateToLoggers() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            PreparedStatement preparedStatement = connection.prepareStatement(
+                    "INSERT INTO loggers (book_id, user_id, date_of_start, date_of_return, status) " +
+                            "VALUES (?, ?, ?, ?, ?)"
+            );
+            preparedStatement.setInt(1, 2);
+            preparedStatement.setInt(2, 1);
+            Calendar cal = Calendar.getInstance();
+            Date date = new java.sql.Date(cal.getTimeInMillis());
+            preparedStatement.setDate(3, date);
+            preparedStatement.setDate(4, null);
+            preparedStatement.setString(5, "reading");
+            preparedStatement.executeUpdate();
+
+            preparedStatement.setInt(1, 1);
+            preparedStatement.setInt(2, 3);
+            Date date1 = new java.sql.Date(120,11,5);
+            Date date2 = new java.sql.Date(121,5,2);
+            preparedStatement.setDate(3, date1);
+            preparedStatement.setDate(4, date2);
+            preparedStatement.setString(5, "returned");
+            preparedStatement.executeUpdate();
+        }
+    }
+
+    private static void queryAddDateToCoAuthors() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            PreparedStatement preparedStatement = connection.prepareStatement(
+                    "INSERT INTO co_author(books_id, authors_id) VALUES (?, ?)"
+            );
+            preparedStatement.setInt(1, 1);
+            preparedStatement.setInt(2, 4);
+            preparedStatement.executeUpdate();
+
+            preparedStatement.setInt(1, 3);
+            preparedStatement.setInt(2, 3);
+            preparedStatement.executeUpdate();
+        }
+    }
+
+    private static void queryAddDateToBooks() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            PreparedStatement preparedStatement = connection.prepareStatement(
+                    "INSERT INTO books (title, available_amount, main_author_id) VALUES (?, ?, ?)"
+            );
+            preparedStatement.setString(1, "Effective Java");
+            preparedStatement.setInt(2, 3);
+            preparedStatement.setInt(3, 2);
+            preparedStatement.executeUpdate();
+
+            preparedStatement.setString(1, "The Brothers Karamazov");
+            preparedStatement.setInt(2, 23);
+            preparedStatement.setInt(3, 1);
+            preparedStatement.executeUpdate();
+
+            preparedStatement.setString(1, "Java 8");
+            preparedStatement.setInt(2, 4);
+            preparedStatement.setInt(3, 4);
+            preparedStatement.executeUpdate();
+
+            preparedStatement.setString(1, "Core Java");
+            preparedStatement.setInt(2, 1);
+            preparedStatement.setInt(3, 3);
+            preparedStatement.executeUpdate();
+        }
+    }
+
+    private static void queryAddDateToAuthors() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            Statement statement = connection.createStatement();
+            statement.execute("DELETE FROM authors;");
+            statement.execute("ALTER SEQUENCE users_id_seq RESTART WITH 1");
+            PreparedStatement preparedStatement = connection.prepareStatement(
+                    "INSERT INTO authors(first_name, last_name) VALUES (?,?)"
+            );
+            preparedStatement.setString(1, "Fedor");
+            preparedStatement.setString(2, "Dostoevskiy");
+            preparedStatement.executeUpdate();
+
+            preparedStatement.setString(1, "Joshua");
+            preparedStatement.setString(2, "Bloch");
+            preparedStatement.executeUpdate();
+
+            preparedStatement.setString(1, "Key");
+            preparedStatement.setString(2, "Horstmann");
+            preparedStatement.executeUpdate();
+
+            preparedStatement.setString(1, "Herbert");
+            preparedStatement.setString(2, "Schildt");
+            preparedStatement.executeUpdate();
+        }
     }
 
     private static void queryAddDateToUsers() throws SQLException {
@@ -34,37 +127,41 @@ public class JDBCQuery {
             Statement statement = connection.createStatement();
             statement.execute("DELETE FROM users;");
             statement.execute("ALTER SEQUENCE users_id_seq RESTART WITH 1;");
+
             PreparedStatement preparedStatement = connection.prepareStatement(
                     "INSERT INTO users(first_name, last_name, email, password, role_id, age)" +
                             "VALUES (?, ?, ?, ?, ?, ?)"
             );
-            preparedStatement.setString(1,"Anton");
-            preparedStatement.setString(2,"Dorohov");
-            preparedStatement.setString(3,"dorohov@mail.com");
+            preparedStatement.setString(1, "Anton");
+            preparedStatement.setString(2, "Dorohov");
+            preparedStatement.setString(3, "dorohov@mail.com");
             preparedStatement.setString(4, "qwerty");
-            preparedStatement.setInt(5,1);
-            preparedStatement.setInt(6,23);
+            preparedStatement.setInt(5, 1);
+            preparedStatement.setInt(6, 23);
             preparedStatement.executeUpdate();
-            preparedStatement.setString(1,"Ivan");
-            preparedStatement.setString(2,"Popov");
-            preparedStatement.setString(3,"popov@mail.com");
+
+            preparedStatement.setString(1, "Ivan");
+            preparedStatement.setString(2, "Popov");
+            preparedStatement.setString(3, "popov@mail.com");
             preparedStatement.setString(4, "pop123");
-            preparedStatement.setInt(5,2);
-            preparedStatement.setInt(6,33);
+            preparedStatement.setInt(5, 2);
+            preparedStatement.setInt(6, 33);
             preparedStatement.executeUpdate();
-            preparedStatement.setString(1,"Ilya");
-            preparedStatement.setString(2,"Ivanov");
-            preparedStatement.setString(3,"ivanov@mail.com");
+
+            preparedStatement.setString(1, "Ilya");
+            preparedStatement.setString(2, "Ivanov");
+            preparedStatement.setString(3, "ivanov@mail.com");
             preparedStatement.setString(4, "ivan45");
-            preparedStatement.setInt(5,2);
-            preparedStatement.setInt(6,45);
+            preparedStatement.setInt(5, 2);
+            preparedStatement.setInt(6, 45);
             preparedStatement.executeUpdate();
-            preparedStatement.setString(1,"Olga");
-            preparedStatement.setString(2,"Kravec");
-            preparedStatement.setString(3,"olga@mail.com");
+
+            preparedStatement.setString(1, "Olga");
+            preparedStatement.setString(2, "Kravec");
+            preparedStatement.setString(3, "olga@mail.com");
             preparedStatement.setString(4, "ol321");
-            preparedStatement.setInt(5,2);
-            preparedStatement.setInt(6,32);
+            preparedStatement.setInt(5, 2);
+            preparedStatement.setInt(6, 32);
             preparedStatement.executeUpdate();
 
         }
@@ -73,9 +170,6 @@ public class JDBCQuery {
 
     private static void queryAddDateToRoles() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
-            Statement statement = connection.createStatement();
-            statement.execute("DELETE FROM roles;");
-            statement.execute("ALTER SEQUENCE roles_id_seq RESTART WITH 1;");
             PreparedStatement preparedStatement = connection.prepareStatement(
                     "INSERT INTO roles(id, role_name) VALUES (?, ?);"
             );
@@ -156,12 +250,13 @@ public class JDBCQuery {
                     "CREATE TABLE IF NOT EXISTS roles (" +
                             "    id SERIAL," +
                             "    role_name VARCHAR(255) NOT NULL," +
-                            "    CONSTRAINT PK_roles PRIMARY KEY (id)" +
+                            "    CONSTRAINT PK_roles PRIMARY KEY (id)," +
+                            "    CONSTRAINT UQ_roles_role_name UNIQUE (role_name)" +
                             ");");
         }
     }
 
-    private static void init() throws SQLException {
+    private static void init() {
         dataSource = defaultConnectionToPostgres(
                 "jdbc:postgresql://localhost:5432/library",
                 "postgres",
@@ -196,5 +291,4 @@ public class JDBCQuery {
             connection.commit();
         }
     }
-
 }
