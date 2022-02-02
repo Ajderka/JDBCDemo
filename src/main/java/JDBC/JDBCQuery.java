@@ -3,7 +3,7 @@ package JDBC;
 import org.postgresql.ds.PGSimpleDataSource;
 import javax.sql.DataSource;
 import java.sql.*;
-import java.util.Calendar;
+import java.time.LocalDate;
 import java.sql.Date;
 
 public class JDBCQuery {
@@ -31,25 +31,21 @@ public class JDBCQuery {
     private static void queryAddDateToLoggers() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(
-                    "INSERT INTO loggers (book_id, user_id, date_of_start, date_of_return, status) " +
+                    "INSERT INTO loggers (book_id, user_id, book_taking_date, agreed_return_date, actual_return_date) " +
                             "VALUES (?, ?, ?, ?, ?)"
             );
             preparedStatement.setInt(1, 2);
             preparedStatement.setInt(2, 1);
-            Calendar cal = Calendar.getInstance();
-            Date date = new java.sql.Date(cal.getTimeInMillis());
-            preparedStatement.setDate(3, date);
-            preparedStatement.setDate(4, null);
-            preparedStatement.setString(5, "reading");
+            preparedStatement.setDate(3, Date.valueOf(LocalDate.of(2020, 5,5)));
+            preparedStatement.setDate(4, Date.valueOf(LocalDate.of(2020, 6,5)));
+            preparedStatement.setDate(5, null);
             preparedStatement.executeUpdate();
 
             preparedStatement.setInt(1, 1);
             preparedStatement.setInt(2, 3);
-            Date date1 = new java.sql.Date(120,11,5);
-            Date date2 = new java.sql.Date(121,5,2);
-            preparedStatement.setDate(3, date1);
-            preparedStatement.setDate(4, date2);
-            preparedStatement.setString(5, "returned");
+            preparedStatement.setDate(3, Date.valueOf(LocalDate.of(2021, 2,15)));
+            preparedStatement.setDate(4, Date.valueOf(LocalDate.of(2021, 3,15)));
+            preparedStatement.setDate(5, Date.valueOf(LocalDate.of(2022, 1,1)));
             preparedStatement.executeUpdate();
         }
     }
@@ -129,8 +125,8 @@ public class JDBCQuery {
             statement.execute("ALTER SEQUENCE users_id_seq RESTART WITH 1;");
 
             PreparedStatement preparedStatement = connection.prepareStatement(
-                    "INSERT INTO users(first_name, last_name, email, password, role_id, age)" +
-                            "VALUES (?, ?, ?, ?, ?, ?)"
+                    "INSERT INTO users(first_name, last_name, email, password, role_id, age, reg_date)" +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?)"
             );
             preparedStatement.setString(1, "Anton");
             preparedStatement.setString(2, "Dorohov");
@@ -138,6 +134,7 @@ public class JDBCQuery {
             preparedStatement.setString(4, "qwerty");
             preparedStatement.setInt(5, 1);
             preparedStatement.setInt(6, 23);
+            preparedStatement.setDate(7, Date.valueOf(LocalDate.of(2021,12,15)));
             preparedStatement.executeUpdate();
 
             preparedStatement.setString(1, "Ivan");
@@ -146,6 +143,7 @@ public class JDBCQuery {
             preparedStatement.setString(4, "pop123");
             preparedStatement.setInt(5, 2);
             preparedStatement.setInt(6, 33);
+            preparedStatement.setDate(7, Date.valueOf(LocalDate.of(2021,10,4)));
             preparedStatement.executeUpdate();
 
             preparedStatement.setString(1, "Ilya");
@@ -154,6 +152,7 @@ public class JDBCQuery {
             preparedStatement.setString(4, "ivan45");
             preparedStatement.setInt(5, 2);
             preparedStatement.setInt(6, 45);
+            preparedStatement.setDate(7, Date.valueOf(LocalDate.of(2022, 1,5)));
             preparedStatement.executeUpdate();
 
             preparedStatement.setString(1, "Olga");
@@ -162,6 +161,7 @@ public class JDBCQuery {
             preparedStatement.setString(4, "ol321");
             preparedStatement.setInt(5, 2);
             preparedStatement.setInt(6, 32);
+            preparedStatement.setDate(7, Date.valueOf(LocalDate.now()));
             preparedStatement.executeUpdate();
 
         }
@@ -191,9 +191,9 @@ public class JDBCQuery {
                             "    id SERIAL," +
                             "    book_id INT NOT NULL," +
                             "    user_id INT NOT NULL," +
-                            "    date_of_start DATE DEFAULT now()," +
-                            "    date_of_return DATE DEFAULT NULL," +
-                            "    status VARCHAR(255) NOT NULL," +
+                            "    book_taking_date DATE DEFAULT now()," +
+                            "    agreed_return_date DATE NOT NULL ," +
+                            "    actual_return_date DATE DEFAULT NULL," +
                             "    CONSTRAINT PK_loggers PRIMARY KEY (id)," +
                             "    CONSTRAINT FK_loggers_users FOREIGN KEY (user_id) REFERENCES users(id)," +
                             "    CONSTRAINT FK_loggers_books FOREIGN KEY (book_id) REFERENCES books(id)" +
@@ -284,6 +284,7 @@ public class JDBCQuery {
                             "    password VARCHAR(255) NOT NULL," +
                             "    role_id INT NOT NULL," +
                             "    age INT NOT NULL," +
+                            "    reg_date DATE NOT NULL," +
                             "    CONSTRAINT PK_users PRIMARY KEY (id)," +
                             "    CONSTRAINT UQ_users_email UNIQUE (email)," +
                             "    CONSTRAINT FK_users_roles FOREIGN KEY (role_id) REFERENCES roles(id)" +
